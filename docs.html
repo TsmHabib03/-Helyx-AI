@@ -1,0 +1,822 @@
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Helyx AI /v1 — Developer Documentation</title>
+  <meta name="description" content="API documentation for Helyx AI /v1 — one OpenAI-compatible endpoint in front of 50+ frontier models.">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          },
+          colors: {
+            brand: {
+              50: '#ecfdf5',
+              400: '#34d399',
+              500: '#10b981',
+              600: '#059669',
+            }
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    * { scrollbar-width: thin; scrollbar-color: #27272a #09090b; }
+    ::-webkit-scrollbar { width: 6px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #27272a; border-radius: 3px; }
+    ::selection { background: rgba(16, 185, 129, 0.25); }
+    html { scroll-padding-top: 5rem; }
+    body { background: #0a0a0a; }
+    .sidebar-link.active { color: #34d399; border-left-color: #34d399; background: rgba(52, 211, 153, 0.05); }
+    .code-block { position: relative; }
+    .code-block .copy-btn { position: absolute; top: 0.5rem; right: 0.5rem; opacity: 0; transition: opacity 0.15s; }
+    .code-block:hover .copy-btn { opacity: 1; }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: translateY(0); } }
+    .fade-in { animation: fadeIn 0.3s ease-out; }
+    .mobile-menu { transform: translateX(100%); transition: transform 0.3s cubic-bezier(0.4,0,0.2,1); }
+    .mobile-menu.open { transform: translateX(0); }
+    @media (max-width: 1023px) { .sidebar-desktop { display: none !important; } }
+    @media (min-width: 1024px) { .mobile-overlay { display: none !important; } }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-300 font-sans antialiased">
+
+  <!-- ===== TOP NAV ===== -->
+  <header class="fixed top-0 left-0 right-0 z-50 border-b border-zinc-800/80 bg-zinc-950/80 backdrop-blur-xl">
+    <div class="max-w-[1440px] mx-auto flex items-center justify-between h-14 px-4 lg:px-6">
+      <a href="https://helyxai.space/signup.php?ref=docs_logo" class="flex items-center gap-2 text-zinc-100 font-semibold text-sm shrink-0">
+        <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+        <span>Helyx AI</span><span class="text-zinc-500 font-normal">/v1</span>
+      </a>
+
+      <!-- Desktop nav -->
+      <nav class="hidden lg:flex items-center gap-1">
+        <a href="#quickstart" class="px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors rounded-md hover:bg-zinc-800/60">Quickstart</a>
+        <a href="#chat-completions" class="px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors rounded-md hover:bg-zinc-800/60">API Reference</a>
+        <a href="#models" class="px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors rounded-md hover:bg-zinc-800/60">Models</a>
+        <a href="#sdk-examples" class="px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors rounded-md hover:bg-zinc-800/60">SDKs</a>
+        <a href="#error-codes" class="px-3 py-1.5 text-sm text-zinc-400 hover:text-zinc-100 transition-colors rounded-md hover:bg-zinc-800/60">Errors</a>
+      </nav>
+
+      <div class="hidden lg:flex items-center gap-2">
+        <a href="https://helyxai.space/dashboard" class="text-sm text-zinc-400 hover:text-zinc-100 px-3 py-1.5 rounded-md hover:bg-zinc-800/60 transition-colors">Dashboard</a>
+        <a href="https://helyxai.space/dashboard" class="text-sm font-medium text-zinc-950 bg-emerald-400 hover:bg-emerald-300 px-4 py-1.5 rounded-lg transition-colors">Get API Key</a>
+      </div>
+
+      <!-- Mobile burger -->
+      <button id="burger" class="lg:hidden p-2 text-zinc-400 hover:text-zinc-100" aria-label="Open menu">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- Mobile overlay -->
+  <div id="overlay" class="mobile-overlay fixed inset-0 z-50 bg-black/60 hidden" onclick="closeMobile()"></div>
+
+  <!-- Mobile menu -->
+  <div id="mobileMenu" class="mobile-menu fixed top-0 right-0 bottom-0 z-50 w-72 bg-zinc-900 border-l border-zinc-800 p-6 overflow-y-auto lg:hidden">
+    <div class="flex items-center justify-between mb-8">
+      <span class="text-sm font-semibold text-zinc-100">Menu</span>
+      <button onclick="closeMobile()" class="text-zinc-400 hover:text-zinc-100 p-1">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <nav class="flex flex-col gap-1 text-sm">
+      <a href="#quickstart" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Quickstart</a>
+      <a href="#authentication" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Authentication</a>
+      <a href="#chat-completions" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Chat Completions</a>
+      <a href="#streaming" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Streaming</a>
+      <a href="#token-accounting" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Token Accounting</a>
+      <a href="#free-token-waterfall" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Free-Token Waterfall</a>
+      <a href="#retries" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Retries &amp; Overload</a>
+      <a href="#data-logging" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Data Logging</a>
+      <a href="#error-codes" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Error Codes</a>
+      <a href="#models" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Model Catalog</a>
+      <a href="#sdk-examples" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">SDK Examples</a>
+      <a href="#support" onclick="closeMobile()" class="px-3 py-2.5 text-zinc-400 hover:text-zinc-100 hover:bg-zinc-800 rounded-lg transition-colors">Support</a>
+    </nav>
+    <div class="mt-8 pt-6 border-t border-zinc-800">
+      <a href="https://helyxai.space/dashboard" class="block w-full text-center text-sm font-medium text-zinc-950 bg-emerald-400 hover:bg-emerald-300 px-4 py-2.5 rounded-lg transition-colors">Get API Key</a>
+    </div>
+  </div>
+
+  <!-- ===== LAYOUT ===== -->
+  <div class="max-w-[1440px] mx-auto flex pt-14">
+
+    <!-- Sidebar TOC -->
+    <aside class="sidebar-desktop hidden lg:block w-56 xl:w-60 shrink-0 sticky top-14 h-[calc(100vh-3.5rem)] overflow-y-auto py-8 pl-6 pr-2 border-r border-zinc-800/50">
+      <p class="text-[10px] font-mono uppercase tracking-[0.15em] text-zinc-500 mb-3 px-3">On this page</p>
+      <nav id="sidebarNav" class="flex flex-col">
+        <a href="#introduction" class="sidebar-link active text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Introduction</a>
+        <a href="#quickstart" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Quickstart</a>
+        <a href="#authentication" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Authentication</a>
+        <a href="#chat-completions" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Chat completions</a>
+        <a href="#streaming" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Streaming</a>
+        <a href="#token-accounting" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Token accounting</a>
+        <a href="#free-token-waterfall" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Free-token waterfall</a>
+        <a href="#retries" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Retries &amp; overload</a>
+        <a href="#data-logging" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Data logging</a>
+        <a href="#error-codes" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Error codes</a>
+        <a href="#models" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Model catalog</a>
+        <a href="#sdk-examples" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">SDK examples</a>
+        <a href="#support" class="sidebar-link text-[13px] text-zinc-500 hover:text-zinc-300 border-l-2 border-transparent pl-3 pr-3 py-1.5 transition-all">Support</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="flex-1 min-w-0 px-4 sm:px-8 lg:px-12 xl:px-16 py-10 lg:py-14">
+
+      <!-- ===== INTRODUCTION ===== -->
+      <section id="introduction" class="mb-20">
+        <div class="flex items-center gap-2 mb-4">
+          <span class="text-[10px] font-mono uppercase tracking-[0.15em] text-emerald-400">Unified API gateway</span>
+        </div>
+        <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-zinc-100 tracking-tight leading-[1.15] mb-5">
+          Build against<br class="sm:hidden"> one endpoint
+        </h1>
+        <p class="text-zinc-400 text-base sm:text-lg max-w-2xl leading-relaxed">
+          Helyx AI speaks the OpenAI Chat Completions protocol. Point any existing OpenAI client at
+          <code class="text-emerald-400 text-sm font-mono bg-emerald-400/10 px-1.5 py-0.5 rounded">https://helyxai.space/v1</code>,
+          swap the key, change the model string — done. There is no SDK of ours to install.
+        </p>
+        <div class="mt-6 flex flex-wrap gap-3">
+          <a href="#quickstart" class="inline-flex items-center gap-2 bg-emerald-400 hover:bg-emerald-300 text-zinc-950 font-semibold text-sm px-5 py-2.5 rounded-lg transition-colors">
+            Quickstart
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>
+          </a>
+          <a href="#chat-completions" class="inline-flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-sm px-5 py-2.5 rounded-lg border border-zinc-700 transition-colors">
+            API Reference
+          </a>
+        </div>
+      </section>
+
+      <!-- ===== QUICKSTART ===== -->
+      <section id="quickstart" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Quickstart</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          Create an account, grab a key from the dashboard, and make a call. Every claimable model's daily grant is taken automatically the moment you sign in.
+        </p>
+        <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">bash</span>
+            <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+          </div>
+          <pre class="p-4 sm:p-5 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300"><span class="text-zinc-500"># 1. sign in at helyxai.space, open the dashboard, create a key</span>
+<span class="text-zinc-500"># 2. today's free tokens are already claimed on every eligible model</span>
+<span class="text-emerald-400">curl</span> <span class="text-zinc-100">https://helyxai.space/v1/chat/completions</span> \
+  -H <span class="text-amber-300">"Authorization: Bearer sk-your-key"</span> \
+  -H <span class="text-amber-300">"Content-Type: application/json"</span> \
+  -d <span class="text-amber-300">'{
+    "model": "claude-opus-5",
+    "messages": [{"role": "user", "content": "Hello"}]
+  }'</span></code></pre>
+        </div>
+      </section>
+
+      <!-- ===== AUTHENTICATION ===== -->
+      <section id="authentication" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Authentication</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          Every request carries a bearer token. Keys are created and revoked on the dashboard. We store only a SHA-256 hash, so a lost key cannot be recovered — revoke it and create a new one.
+        </p>
+        <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mb-5">
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">header</span>
+            <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+          </div>
+          <pre class="p-4 sm:p-5 overflow-x-auto text-sm"><code class="text-zinc-300">Authorization: <span class="text-emerald-400">Bearer</span> <span class="text-amber-300">sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span></code></pre>
+        </div>
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl px-5 py-4 flex gap-3 items-start">
+          <svg class="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            A missing or malformed header returns <code class="text-emerald-400 font-mono text-xs">401</code>. Keys are account-wide: any key can call any active model.
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== CHAT COMPLETIONS ===== -->
+      <section id="chat-completions" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Chat completions</h2>
+        <div class="flex flex-wrap items-center gap-3 mb-5">
+          <span class="inline-flex items-center bg-emerald-400/10 text-emerald-400 text-xs font-mono font-semibold px-2.5 py-1 rounded-md border border-emerald-400/20">POST</span>
+          <code class="text-sm font-mono text-zinc-400">https://helyxai.space/v1/chat/completions</code>
+        </div>
+        <p class="text-zinc-400 text-sm mb-4">
+          <span class="font-medium text-zinc-300">Headers:</span>
+          <code class="font-mono text-xs text-zinc-500 ml-1">Content-Type: application/json</code>
+          <span class="mx-2 text-zinc-700">|</span>
+          <code class="font-mono text-xs text-zinc-500">CORS: enabled for all origins</code>
+        </p>
+
+        <h3 class="text-lg font-semibold text-zinc-100 mb-3">Request body</h3>
+        <div class="overflow-x-auto mb-6">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-zinc-800 text-left">
+                <th class="py-3 pr-6 font-medium text-zinc-400 font-mono text-xs uppercase tracking-wider">Field</th>
+                <th class="py-3 pr-6 font-medium text-zinc-400 font-mono text-xs uppercase tracking-wider">Type</th>
+                <th class="py-3 pr-6 font-medium text-zinc-400 font-mono text-xs uppercase tracking-wider">Required</th>
+                <th class="py-3 font-medium text-zinc-400 font-mono text-xs uppercase tracking-wider">Description</th>
+              </tr>
+            </thead>
+            <tbody class="text-zinc-300">
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs">model</td>
+                <td class="py-3 pr-6 text-zinc-500 font-mono text-xs">string</td>
+                <td class="py-3 pr-6"><span class="text-emerald-400 text-xs font-mono">required</span></td>
+                <td class="py-3 text-zinc-400">Slug from the catalog, e.g. <code class="font-mono text-xs text-zinc-300">claude-opus-5</code></td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs">messages</td>
+                <td class="py-3 pr-6 text-zinc-500 font-mono text-xs">array</td>
+                <td class="py-3 pr-6"><span class="text-emerald-400 text-xs font-mono">required</span></td>
+                <td class="py-3 text-zinc-400">Array of <code class="font-mono text-xs text-zinc-300">{role, content}</code>; roles: <code class="font-mono text-xs text-zinc-300">system</code>, <code class="font-mono text-xs text-zinc-300">user</code>, <code class="font-mono text-xs text-zinc-300">assistant</code></td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs">stream</td>
+                <td class="py-3 pr-6 text-zinc-500 font-mono text-xs">boolean</td>
+                <td class="py-3 pr-6"><span class="text-zinc-600 text-xs font-mono">optional</span></td>
+                <td class="py-3 text-zinc-400">Server-sent events when <code class="font-mono text-xs text-zinc-300">true</code></td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs">max_tokens</td>
+                <td class="py-3 pr-6 text-zinc-500 font-mono text-xs">integer</td>
+                <td class="py-3 pr-6"><span class="text-zinc-600 text-xs font-mono">optional</span></td>
+                <td class="py-3 text-zinc-400">Capped at the model's max output</td>
+              </tr>
+              <tr>
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs">temperature</td>
+                <td class="py-3 pr-6 text-zinc-500 font-mono text-xs">float</td>
+                <td class="py-3 pr-6"><span class="text-zinc-600 text-xs font-mono">optional</span></td>
+                <td class="py-3 text-zinc-400">Passed through to the provider</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h3 class="text-lg font-semibold text-zinc-100 mb-3">Response</h3>
+        <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">json · 200 OK</span>
+            <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+          </div>
+          <pre class="p-4 sm:p-5 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300">{
+  <span class="text-zinc-500">"id"</span>: <span class="text-amber-300">"msg_9f0..."</span>,
+  <span class="text-zinc-500">"object"</span>: <span class="text-amber-300">"chat.completion"</span>,
+  <span class="text-zinc-500">"model"</span>: <span class="text-amber-300">"claude-opus-5"</span>,
+  <span class="text-zinc-500">"choices"</span>: [{
+    <span class="text-zinc-500">"index"</span>: <span class="text-emerald-400">0</span>,
+    <span class="text-zinc-500">"message"</span>: { <span class="text-zinc-500">"role"</span>: <span class="text-amber-300">"assistant"</span>, <span class="text-zinc-500">"content"</span>: <span class="text-amber-300">"..."</span> },
+    <span class="text-zinc-500">"finish_reason"</span>: <span class="text-amber-300">"stop"</span>
+  }],
+  <span class="text-zinc-500">"usage"</span>: { <span class="text-zinc-500">"prompt_tokens"</span>: <span class="text-emerald-400">1240</span>, <span class="text-zinc-500">"completion_tokens"</span>: <span class="text-emerald-400">86</span>, <span class="text-zinc-500">"total_tokens"</span>: <span class="text-emerald-400">1326</span> }
+}</code></pre>
+        </div>
+      </section>
+
+      <!-- ===== STREAMING ===== -->
+      <section id="streaming" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Streaming</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          Set <code class="text-emerald-400 font-mono text-xs bg-emerald-400/10 px-1.5 py-0.5 rounded">"stream": true</code> to receive server-sent events. Chunks arrive as <code class="font-mono text-xs text-zinc-300">data:</code> lines and the stream ends with <code class="font-mono text-xs text-zinc-300">data: [DONE]</code>. Usage totals arrive in the final chunk, so billing stays accurate on streamed calls.
+        </p>
+
+        <div class="grid gap-4 sm:grid-cols-2">
+          <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">bash</span>
+              <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+            </div>
+            <pre class="p-4 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300"><span class="text-emerald-400">curl</span> -N https://helyxai.space/v1/chat/completions \
+  -H <span class="text-amber-300">"Authorization: Bearer sk-your-key"</span> \
+  -H <span class="text-amber-300">"Content-Type: application/json"</span> \
+  -d <span class="text-amber-300">'{"model":"claude-opus-5",
+    "stream":true,
+    "messages":[{"role":"user",
+      "content":"Count to five"}]}'</span></code></pre>
+          </div>
+          <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+            <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+              <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">sse response</span>
+              <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+            </div>
+            <pre class="p-4 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300"><span class="text-zinc-500">data:</span> {"choices":[{"delta":{"content":"One"}}]}
+<span class="text-zinc-500">data:</span> {"choices":[{"delta":{"content":", two"}}]}
+<span class="text-zinc-500">data:</span> [DONE]</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- ===== TOKEN ACCOUNTING ===== -->
+      <section id="token-accounting" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Token accounting</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          You are charged for what you actually send and receive.
+        </p>
+        <ul class="space-y-4">
+          <li class="flex gap-3 items-start">
+            <span class="text-emerald-400 mt-1.5 shrink-0">
+              <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><circle cx="3" cy="3" r="3"/></svg>
+            </span>
+            <span class="text-zinc-400 text-sm leading-relaxed">
+              <strong class="text-zinc-200 font-medium">Gateway preamble is not billed.</strong>
+              Upstream providers prepend a fixed system preamble — roughly 7,100 tokens on Claude Opus 5. We subtract it before anything is logged or charged. A one-word prompt therefore records 0 input tokens, not 7,000.
+            </span>
+          </li>
+          <li class="flex gap-3 items-start">
+            <span class="text-emerald-400 mt-1.5 shrink-0">
+              <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><circle cx="3" cy="3" r="3"/></svg>
+            </span>
+            <span class="text-zinc-400 text-sm leading-relaxed">
+              <strong class="text-zinc-200 font-medium">Only the remainder counts as input.</strong>
+              If the provider reports 15,037 prompt tokens, your logged input is 15,037 − 7,100 = 7,937.
+            </span>
+          </li>
+          <li class="flex gap-3 items-start">
+            <span class="text-emerald-400 mt-1.5 shrink-0">
+              <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><circle cx="3" cy="3" r="3"/></svg>
+            </span>
+            <span class="text-zinc-400 text-sm leading-relaxed">
+              <strong class="text-zinc-200 font-medium">Output is counted as reported.</strong> No adjustment.
+            </span>
+          </li>
+          <li class="flex gap-3 items-start">
+            <span class="text-emerald-400 mt-1.5 shrink-0">
+              <svg width="6" height="6" viewBox="0 0 6 6" fill="currentColor"><circle cx="3" cy="3" r="3"/></svg>
+            </span>
+            <span class="text-zinc-400 text-sm leading-relaxed">
+              <strong class="text-zinc-200 font-medium">Free tokens are generic.</strong>
+              A grant of 1M covers 1M combined input + output tokens.
+            </span>
+          </li>
+        </ul>
+      </section>
+
+      <!-- ===== FREE-TOKEN WATERFALL ===== -->
+      <section id="free-token-waterfall" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Free-token waterfall</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          There are no plan tiers and no per-model daily caps. Every request draws from three sources in order:
+        </p>
+        <div class="grid gap-4 sm:grid-cols-3 mb-6">
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+            <span class="font-mono text-xs text-emerald-400 tracking-wider uppercase">Stage 1</span>
+            <h3 class="text-lg font-semibold text-zinc-100 mt-2 mb-2">Today's claim</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">Per model, expires at midnight if unused. A new claim is available the next day.</p>
+          </div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+            <span class="font-mono text-xs text-emerald-400 tracking-wider uppercase">Stage 2</span>
+            <h3 class="text-lg font-semibold text-zinc-100 mt-2 mb-2">Permanent pool</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">5,000,000 per invited user, plus anything an approved review paid; stacks and never expires.</p>
+          </div>
+          <div class="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+            <span class="font-mono text-xs text-emerald-400 tracking-wider uppercase">Stage 3</span>
+            <h3 class="text-lg font-semibold text-zinc-100 mt-2 mb-2">Credit balance</h3>
+            <p class="text-zinc-400 text-sm leading-relaxed">Billed at the model's listed rate. Top up with crypto when you need more.</p>
+          </div>
+        </div>
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl px-5 py-4 flex gap-3 items-start">
+          <svg class="w-4 h-4 text-amber-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="m21.73 18-8-14a2 2 0 0 0-3.48 0l-8 14A2 2 0 0 0 4 21h16a2 2 0 0 0 1.73-3Z"/><path d="M12 9v4"/><path d="M12 17h.01"/></svg>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Daily claims do not roll over. If unused, they vanish at midnight. Requests draw proportionally from all three sources simultaneously — you won't see separate charges per tier.
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== RETRIES & OVERLOAD ===== -->
+      <section id="retries" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Retries &amp; overload</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          Every model call is attempted up to three times against the upstream provider before we give up. Transient failures — timeouts, 5xx, rate limits, dropped connections — are retried transparently with a short backoff, so most blips never reach your code.
+        </p>
+        <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mb-5">
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">json · 503</span>
+            <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+          </div>
+          <pre class="p-4 sm:p-5 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300">{
+  <span class="text-zinc-500">"error"</span>: {
+    <span class="text-zinc-500">"message"</span>: <span class="text-amber-300">"Server is overloaded, try again in a while or contact support."</span>,
+    <span class="text-zinc-500">"type"</span>: <span class="text-amber-300">"server_overloaded"</span>,
+    <span class="text-zinc-500">"code"</span>: <span class="text-emerald-400">503</span>,
+    <span class="text-zinc-500">"support"</span>: {
+      <span class="text-zinc-500">"whatsapp"</span>: <span class="text-amber-300">"https://wa.me/923125893198"</span>,
+      <span class="text-zinc-500">"telegram"</span>: <span class="text-amber-300">"https://t.me/kairalmas"</span>
+    }
+  }
+}</code></pre>
+        </div>
+        <div class="bg-zinc-900/50 border border-zinc-800 rounded-xl px-5 py-4 flex gap-3 items-start">
+          <svg class="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 16v-4"/><path d="M12 8h.01"/></svg>
+          <p class="text-sm text-zinc-400 leading-relaxed">
+            Failed requests are <strong class="text-zinc-200">never billed</strong> and <strong class="text-zinc-200">never consume free tokens</strong>.
+            WhatsApp: <a href="https://wa.me/923125893198" target="_blank" class="text-emerald-400 hover:underline">+92 312 5893198</a> · Telegram: <a href="https://t.me/kairalmas" target="_blank" class="text-emerald-400 hover:underline">@kairalmas</a>
+          </p>
+        </div>
+      </section>
+
+      <!-- ===== DATA LOGGING ===== -->
+      <section id="data-logging" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Data logging</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-4">
+          During platform tuning phases, request and response content may be temporarily logged to help us improve model routing and quality. Logs are stored outside the web root and are never shared with third parties.
+        </p>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-4">
+          Once tuning is complete, content logs are purged. API keys, IP addresses, and usage metadata are retained for billing and abuse prevention only.
+        </p>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed">
+          If you need content-level privacy at all times, contact us to opt out of logging for your account.
+        </p>
+      </section>
+
+      <!-- ===== ERROR CODES ===== -->
+      <section id="error-codes" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Error codes</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          The API uses conventional HTTP status codes. Errors return a JSON body with <code class="font-mono text-xs text-zinc-300">error.message</code> and <code class="font-mono text-xs text-zinc-300">error.code</code>.
+        </p>
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-zinc-800 text-left">
+                <th class="py-3 pr-6 font-medium text-zinc-400 font-mono text-xs uppercase tracking-wider">Code</th>
+                <th class="py-3 font-medium text-zinc-400 font-mono text-xs uppercase tracking-wider">Description</th>
+              </tr>
+            </thead>
+            <tbody class="text-zinc-300">
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs font-semibold">400</td>
+                <td class="py-3 text-zinc-400">Missing model or malformed body</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs font-semibold">401</td>
+                <td class="py-3 text-zinc-400">Missing, malformed, or revoked API key</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs font-semibold">402</td>
+                <td class="py-3 text-zinc-400">No free tokens and no balance — claim daily tokens or top up</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs font-semibold">404</td>
+                <td class="py-3 text-zinc-400">Unknown or inactive model slug</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs font-semibold">500</td>
+                <td class="py-3 text-zinc-400">Handler misconfiguration on our side</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50">
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs font-semibold">502</td>
+                <td class="py-3 text-zinc-400">Upstream gateway error we could not classify</td>
+              </tr>
+              <tr>
+                <td class="py-3 pr-6 font-mono text-emerald-400 text-xs font-semibold">503</td>
+                <td class="py-3 text-zinc-400">All three upstream attempts failed — server overloaded</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== MODEL CATALOG ===== -->
+      <section id="models" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Model catalog</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          12 models are active right now. Rates are per 1M tokens; a struck-through price means a discount is live and is applied automatically at request time.
+        </p>
+        <div class="overflow-x-auto rounded-xl border border-zinc-800">
+          <table class="w-full text-sm min-w-[700px]">
+            <thead>
+              <tr class="border-b border-zinc-800 bg-zinc-900/50 text-left">
+                <th class="py-3 px-4 font-medium text-zinc-400 font-mono text-[10px] uppercase tracking-wider">Slug</th>
+                <th class="py-3 px-4 font-medium text-zinc-400 font-mono text-[10px] uppercase tracking-wider">Model</th>
+                <th class="py-3 px-4 font-medium text-zinc-400 font-mono text-[10px] uppercase tracking-wider">Context</th>
+                <th class="py-3 px-4 font-medium text-zinc-400 font-mono text-[10px] uppercase tracking-wider text-right">In / 1M</th>
+                <th class="py-3 px-4 font-medium text-zinc-400 font-mono text-[10px] uppercase tracking-wider text-right">Out / 1M</th>
+                <th class="py-3 px-4 font-medium text-zinc-400 font-mono text-[10px] uppercase tracking-wider text-right">Daily claim</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">claude-haiku-4-5</td>
+                <td class="py-3 px-4 text-zinc-200">Claude Haiku 4.5 <span class="text-zinc-500 text-xs">Anthropic</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">1M</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$1.00</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$5.00</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">DeepSeek-V4-Flash</td>
+                <td class="py-3 px-4 text-zinc-200">DeepSeek-V4 Flash <span class="text-zinc-500 text-xs">DeepSeek</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">1M</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.140</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.280</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">gemini-3.1-flash-lite</td>
+                <td class="py-3 px-4 text-zinc-200">Gemini 3.1 Flash Lite <span class="text-zinc-500 text-xs">Google</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">1M</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.250</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$1.50</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">gemma-4-31B-it</td>
+                <td class="py-3 px-4 text-zinc-200">Gemma4 31B <span class="text-zinc-500 text-xs">Google</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">262K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.200</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.500</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">ling-3-flash</td>
+                <td class="py-3 px-4 text-zinc-200">Ling 3.0 Flash <span class="text-zinc-500 text-xs">Ling</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">128K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.200</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.500</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">longcat-2.0</td>
+                <td class="py-3 px-4 text-zinc-200">LongCat 2.0 <span class="text-zinc-500 text-xs">Meituan</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">128K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.800</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$3.00</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">MiniMax-M3</td>
+                <td class="py-3 px-4 text-zinc-200">MiniMax M3 <span class="text-zinc-500 text-xs">MiniMax</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">1M</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.300</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$1.20</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">nemotron-3-ultramuse-spark-1.3</td>
+                <td class="py-3 px-4 text-zinc-200">Nemotron 3 UltraMuse Spark <span class="text-zinc-500 text-xs">Nvidia</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">128K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.200</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.500</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">gpt-5.4-nano</td>
+                <td class="py-3 px-4 text-zinc-200">GPT-5.4 Nano <span class="text-zinc-500 text-xs">OpenAI</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">400K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.500</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.150</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">DeepSeek-V4-Pro</td>
+                <td class="py-3 px-4 text-zinc-200">DeepSeek-V4 Pro <span class="text-zinc-500 text-xs">Zhipu AI</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">128K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.800</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$1.50</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="border-b border-zinc-800/50 hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">glm-5.3-flash</td>
+                <td class="py-3 px-4 text-zinc-200">GLM-5.3 Flash <span class="text-zinc-500 text-xs">Zhipu AI</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">128K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.250</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.500</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+              <tr class="hover:bg-zinc-900/40 transition-colors">
+                <td class="py-3 px-4 font-mono text-emerald-400 text-xs">qwen3.8-flash</td>
+                <td class="py-3 px-4 text-zinc-200">Qwen3.8 Flash <span class="text-zinc-500 text-xs">Zhipu AI</span></td>
+                <td class="py-3 px-4 text-zinc-400 font-mono text-xs">131K</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.200</td>
+                <td class="py-3 px-4 text-zinc-300 font-mono text-xs text-right">$0.500</td>
+                <td class="py-3 px-4 text-zinc-600 font-mono text-xs text-right">—</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+
+      <!-- ===== SDK EXAMPLES ===== -->
+      <section id="sdk-examples" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">SDK examples</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          Use the official OpenAI SDKs — just point them at the Helyx endpoint.
+        </p>
+
+        <!-- Python -->
+        <h3 class="text-lg font-semibold text-zinc-100 mb-3">Python (openai)</h3>
+        <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mb-8">
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">python</span>
+            <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+          </div>
+          <pre class="p-4 sm:p-5 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300"><span class="text-purple-400">from</span> <span class="text-zinc-300">openai</span> <span class="text-purple-400">import</span> <span class="text-zinc-300">OpenAI</span>
+
+client <span class="text-emerald-400">=</span> <span class="text-emerald-400">OpenAI</span>(
+    <span class="text-amber-300">base_url</span><span class="text-emerald-400">=</span><span class="text-amber-300">"https://helyxai.space/v1"</span>,
+    <span class="text-amber-300">api_key</span><span class="text-emerald-400">=</span><span class="text-amber-300">"sk-your-key"</span>,
+)
+
+resp <span class="text-emerald-400">=</span> client.chat.completions.<span class="text-emerald-400">create</span>(
+    <span class="text-amber-300">model</span><span class="text-emerald-400">=</span><span class="text-amber-300">"claude-opus-5"</span>,
+    <span class="text-amber-300">messages</span><span class="text-emerald-400">=</span>[{<span class="text-amber-300">"role"</span>: <span class="text-amber-300">"user"</span>, <span class="text-amber-300">"content"</span>: <span class="text-amber-300">"Hello"</span>}],
+)
+
+<span class="text-emerald-400">print</span>(resp.choices[<span class="text-emerald-400">0</span>].message.content)</code></pre>
+        </div>
+
+        <!-- Node -->
+        <h3 class="text-lg font-semibold text-zinc-100 mb-3">Node (openai)</h3>
+        <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden mb-8">
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">javascript</span>
+            <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+          </div>
+          <pre class="p-4 sm:p-5 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300"><span class="text-purple-400">import</span> <span class="text-zinc-300">OpenAI</span> <span class="text-purple-400">from</span> <span class="text-amber-300">"openai"</span>;
+
+<span class="text-purple-400">const</span> client <span class="text-emerald-400">=</span> <span class="text-purple-400">new</span> <span class="text-emerald-400">OpenAI</span>({
+  <span class="text-amber-300">baseURL</span>: <span class="text-amber-300">"https://helyxai.space/v1"</span>,
+  <span class="text-amber-300">apiKey</span>: <span class="text-amber-300">"sk-your-key"</span>,
+});
+
+<span class="text-purple-400">const</span> resp <span class="text-emerald-400">=</span> <span class="text-purple-400">await</span> client.chat.completions.<span class="text-emerald-400">create</span>({
+  <span class="text-amber-300">model</span>: <span class="text-amber-300">"claude-opus-5"</span>,
+  <span class="text-amber-300">messages</span>: [{ <span class="text-amber-300">role</span>: <span class="text-amber-300">"user"</span>, <span class="text-amber-300">content</span>: <span class="text-amber-300">"Hello"</span> }],
+});
+
+console.<span class="text-emerald-400">log</span>(resp.choices[<span class="text-emerald-400">0</span>].message.content);</code></pre>
+        </div>
+
+        <!-- Handling 402 & 503 -->
+        <h3 class="text-lg font-semibold text-zinc-100 mb-3">Handling 402 and 503</h3>
+        <div class="code-block bg-zinc-900 border border-zinc-800 rounded-xl overflow-hidden">
+          <div class="flex items-center justify-between px-4 py-2.5 border-b border-zinc-800">
+            <span class="text-[10px] font-mono uppercase tracking-wider text-zinc-500">python</span>
+            <button onclick="copyCode(this)" class="copy-btn text-[11px] font-mono text-zinc-500 hover:text-zinc-300 bg-zinc-800 hover:bg-zinc-700 px-2.5 py-1 rounded-md transition-colors">Copy</button>
+          </div>
+          <pre class="p-4 sm:p-5 overflow-x-auto text-sm leading-relaxed"><code class="text-zinc-300"><span class="text-purple-400">from</span> <span class="text-zinc-300">openai</span> <span class="text-purple-400">import</span> <span class="text-zinc-300">OpenAI</span>, <span class="text-zinc-300">AuthenticationError</span>, <span class="text-zinc-300">APIStatusError</span>
+
+<span class="text-purple-400">try</span>:
+    resp <span class="text-emerald-400">=</span> client.chat.completions.<span class="text-emerald-400">create</span>(
+        <span class="text-amber-300">model</span><span class="text-emerald-400">=</span><span class="text-amber-300">"claude-opus-5"</span>,
+        <span class="text-amber-300">messages</span><span class="text-emerald-400">=</span>[{<span class="text-amber-300">"role"</span>: <span class="text-amber-300">"user"</span>, <span class="text-amber-300">"content"</span>: <span class="text-amber-300">"Hello"</span>}],
+    )
+<span class="text-purple-400">except</span> <span class="text-emerald-400">APIStatusError</span> <span class="text-purple-400">as</span> e:
+    <span class="text-purple-400">if</span> e.status_code <span class="text-emerald-400">==</span> <span class="text-emerald-400">402</span>:
+        <span class="text-emerald-400">print</span>(<span class="text-amber-300">"No balance — top up or claim daily tokens."</span>)
+    <span class="text-purple-400">elif</span> e.status_code <span class="text-emerald-400">==</span> <span class="text-emerald-400">503</span>:
+        <span class="text-emerald-400">print</span>(<span class="text-amber-300">"Server overloaded — retry later."</span>)
+    <span class="text-purple-400">else</span>:
+        <span class="text-emerald-400">raise</span></code></pre>
+        </div>
+      </section>
+
+      <!-- ===== SUPPORT ===== -->
+      <section id="support" class="mb-20">
+        <h2 class="text-2xl sm:text-3xl font-bold text-zinc-100 mb-3">Stuck on something?</h2>
+        <p class="text-zinc-400 text-base max-w-2xl leading-relaxed mb-6">
+          Message us directly — no ticket queue.
+        </p>
+        <div class="flex flex-wrap gap-3">
+          <a href="https://wa.me/923125893198?text=Hi%20Helyx%20AI%2C%20I%20need%20help." target="_blank" rel="noopener"
+             class="inline-flex items-center gap-2.5 bg-[#25D366]/10 hover:bg-[#25D366]/20 text-[#25D360] border border-[#25D366]/20 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+            WhatsApp — +92 312 5893198
+          </a>
+          <a href="https://t.me/kairalmas" target="_blank" rel="noopener"
+             class="inline-flex items-center gap-2.5 bg-[#2AABEE]/10 hover:bg-[#2AABEE]/20 text-[#2AABEE] border border-[#2AABEE]/20 text-sm font-medium px-5 py-2.5 rounded-lg transition-colors">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+            Telegram — @kairalmas
+          </a>
+        </div>
+      </section>
+
+      <!-- Divider -->
+      <div class="border-t border-zinc-800 my-12"></div>
+
+    </main>
+  </div>
+
+  <!-- ===== FOOTER ===== -->
+  <footer class="border-t border-zinc-800 bg-zinc-950">
+    <div class="max-w-[1440px] mx-auto px-4 sm:px-8 lg:px-12 py-12 lg:py-16">
+      <div class="grid grid-cols-2 sm:grid-cols-4 gap-8 lg:gap-12 mb-12">
+        <!-- Brand -->
+        <div class="col-span-2 sm:col-span-1">
+          <a href="https://helyxai.space/signup.php?ref=docs_footer" class="flex items-center gap-2 text-zinc-100 font-semibold text-sm mb-4">
+            <span class="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+            <span>Helyx AI</span>
+          </a>
+          <p class="text-zinc-500 text-sm leading-relaxed max-w-[280px] mb-5">
+            One OpenAI-compatible endpoint in front of 50+ frontier models. No daily caps. Get $10 free credit on signup, earn $5 per referral, and pay as you go with crypto.
+          </p>
+          <div class="flex flex-col gap-2">
+            <a href="https://wa.me/923125893198" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-[#25D360] transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/></svg>
+              +92 312 5893198
+            </a>
+            <a href="https://t.me/kairalmas" target="_blank" rel="noopener" class="inline-flex items-center gap-2 text-xs text-zinc-500 hover:text-[#2AABEE] transition-colors">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="currentColor"><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.15-.056-.212s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.479.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.635z"/></svg>
+              @kairalmas
+            </a>
+          </div>
+        </div>
+
+        <!-- Platform -->
+        <div>
+          <h5 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Platform</h5>
+          <ul class="space-y-2.5">
+            <li><a href="https://helyxai.space/models-list.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Model directory</a></li>
+            <li><a href="https://helyxai.space/pricing.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Pricing</a></li>
+            <li><a href="https://helyxai.space/docs.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">API docs</a></li>
+            <li><a href="https://helyxai.space/chat.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Web chat</a></li>
+          </ul>
+        </div>
+
+        <!-- Account -->
+        <div>
+          <h5 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Account</h5>
+          <ul class="space-y-2.5">
+            <li><a href="https://helyxai.space/dashboard.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Dashboard</a></li>
+            <li><a href="https://helyxai.space/earn.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Referrals</a></li>
+            <li><a href="https://helyxai.space/payments.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Top up</a></li>
+            <li><a href="https://helyxai.space/contact.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Contact us</a></li>
+          </ul>
+        </div>
+
+        <!-- Legal -->
+        <div>
+          <h5 class="text-xs font-semibold text-zinc-400 uppercase tracking-wider mb-4">Legal</h5>
+          <ul class="space-y-2.5">
+            <li><a href="https://helyxai.space/terms.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Terms</a></li>
+            <li><a href="https://helyxai.space/privacy.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">Privacy</a></li>
+            <li><a href="https://helyxai.space/about.php" class="text-sm text-zinc-500 hover:text-zinc-300 transition-colors">About</a></li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom bar -->
+      <div class="border-t border-zinc-800 pt-6 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
+        <span class="text-xs text-zinc-600">&copy; 2026 Helyx AI. All rights reserved.</span>
+        <span class="text-xs font-mono text-zinc-600">POST /v1/chat/completions · <span class="text-emerald-400">status operational</span></span>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ===== SCRIPTS ===== -->
+  <script>
+    // Mobile menu
+    const burger = document.getElementById('burger');
+    const mobileMenu = document.getElementById('mobileMenu');
+    const overlay = document.getElementById('overlay');
+
+    burger.addEventListener('click', () => {
+      mobileMenu.classList.add('open');
+      overlay.classList.remove('hidden');
+    });
+
+    function closeMobile() {
+      mobileMenu.classList.remove('open');
+      overlay.classList.add('hidden');
+    }
+
+    // Copy code
+    function copyCode(btn) {
+      const code = btn.closest('.code-block').querySelector('code').textContent;
+      navigator.clipboard.writeText(code).then(() => {
+        const orig = btn.textContent;
+        btn.textContent = 'Copied!';
+        btn.classList.add('text-emerald-400');
+        setTimeout(() => { btn.textContent = orig; btn.classList.remove('text-emerald-400'); }, 1500);
+      });
+    }
+
+    // Sidebar active state
+    const sections = document.querySelectorAll('section[id]');
+    const sidebarLinks = document.querySelectorAll('#sidebarNav a');
+
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          sidebarLinks.forEach(link => link.classList.remove('active'));
+          const active = document.querySelector(`#sidebarNav a[href="#${entry.target.id}"]`);
+          if (active) active.classList.add('active');
+        }
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+
+    sections.forEach(section => observer.observe(section));
+  </script>
+</body>
+</html>
